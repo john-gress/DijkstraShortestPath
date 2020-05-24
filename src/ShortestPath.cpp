@@ -31,6 +31,53 @@ typedef std::priority_queue< std::tuple<int, int, int>, \
                      */
 typedef std::priority_queue<std::tuple<int, int, int>, std::vector< std::tuple<int, int, int> >, MyCompare > DistanceNode;
 
+int ConvertNodeLetter(char* letter) {
+   switch (letter[0]) {
+      case 'S':
+         return 0;
+         break;
+      case 'A':
+         return 1;
+         break;
+      case 'B':
+         return 2;
+         break;
+      case 'C':
+         return 3;
+         break;
+      case 'D':
+         return 4;
+         break;
+      case 'E':
+         return 5;
+         break;
+      case 'F':
+         return 6;
+         break;
+      case 'G':
+         return 7;
+         break;
+      case 'H':
+         return 8;
+         break;
+      case 'I':
+         return 9;
+         break;
+      case 'J':
+         return 10;
+         break;
+      case 'K':
+         return 11;
+         break;
+      case 'L':
+         return 12;
+         break;
+      default:
+         return -1;
+         break;
+   }
+}
+
 char GetNodeLetter(int i) {
    switch (i) {
       case 0:
@@ -238,8 +285,18 @@ void PrintPath(int startNode, int endNode, std::stack<std::tuple<int, int, int> 
 }
 
 int main(int argc, char* argv[]) {
-   int startNode(9);
-   int endNode(2);
+   if (argc != 3) { // We expect 3 arguments: the program name, the startNode and the endNode
+      std::cerr << "Usage: " << argv[0] << " <startNode> <endNode>" << std::endl;
+      return 1;
+   }
+
+   int startNode = ConvertNodeLetter(argv[1]);
+   int endNode = ConvertNodeLetter(argv[2]);
+   if (startNode == -1 || endNode == -1) {
+      std::cerr << "startNode or endNode is out of range" << std::endl;
+      return 1;
+   }
+
    std::stack<std::tuple<int, int, int> > path;
    std::vector<std::vector< std::pair<int, int> > > edges;
    // Mapping node to pair of values: first is PATHVIA, second is DISTANCE
