@@ -24,11 +24,6 @@ class MyCompare
       }
 };
 
-/*
-typedef std::priority_queue< std::tuple<int, int, int>, \
-                     std::vector< std::tuple<int, int, int> >, \
-                     bool(const std::tuple<int, int, int>&, const std::tuple<int, int, int>&) > DistanceNode;
-                     */
 typedef std::priority_queue<std::tuple<int, int, int>, std::vector< std::tuple<int, int, int> >, MyCompare > DistanceNode;
 
 int ConvertNodeLetter(char* letter) {
@@ -125,6 +120,7 @@ char GetNodeLetter(int i) {
    }
 }
 
+// helper function for debugging priority queue
 void PrintPriorities(DistanceNode& distPq) { 
    while (!distPq.empty()) {
       auto nodeDistance = distPq.top();
@@ -159,12 +155,11 @@ void UpdatePriorityQueue(int node, int distance, int nodeVia, DistanceNode& dist
    distPq = tmpPq;
 }
 
-// return cost of last edge if endNode has been reached
-int ShortestPathVisitNode(const std::tuple<int, int, int>& node, std::vector<std::pair<int, int> >& nodeEdges,
+void VisitNode(int nodeId, std::vector<std::pair<int, int> >& nodeEdges,
    int endNode, std::vector<std::tuple<int, int, bool> >& pathCost, DistanceNode& distPq) { 
-   int  endFound(UNKNOWN_DISTANCE);
-   int nodeId = std::get<NODE>(node);
+
    std::cout << std::endl << "Visiting node: " <<  GetNodeLetter(nodeId) << std::endl;
+
    for (const auto edge : nodeEdges) {
       if (! std::get<VISITED>(pathCost[edge.first])) {
          if (std::get<DISTANCE>(pathCost[edge.first]) > edge.second + std::get<DISTANCE>(pathCost[nodeId])) {
@@ -172,37 +167,38 @@ int ShortestPathVisitNode(const std::tuple<int, int, int>& node, std::vector<std
             UpdatePriorityQueue(edge.first, std::get<DISTANCE>(pathCost[edge.first]), nodeId, distPq);
          }
       }
-      if (edge.first == endNode) {
-         endFound = edge.second;
-      }
    }
    std::get<VISITED>(pathCost[nodeId]) = true;
-   return endFound;
 }
 
-void ShortestPath(std::vector<std::vector< std::pair<int, int> > >& edges, int startNode, int endNode,
+bool ShortestPath(std::vector<std::vector< std::pair<int, int> > >& edges, int startNode, int endNode,
    std::vector<std::tuple<int, int, bool> >& pathCost, DistanceNode& distPq,
    std::stack<std::tuple<int, int, int> >& path) { 
 
    std::cout << "Finding shortest path from: " << GetNodeLetter(startNode) << " to: " 
       << GetNodeLetter(endNode) << std::endl;
 
-   int distanceCostToEndNode(UNKNOWN_DISTANCE);
-   while (distanceCostToEndNode == UNKNOWN_DISTANCE) {
+   bool searchComplete(false);
+   bool pathFound = false;
+   while (! searchComplete) {
       if (distPq.empty()) {
          std::cout << "Priority queue is empty before end node is found. Aborting path search." << std::endl;
-         distanceCostToEndNode = UNKNOWN_DISTANCE - 1;
+         searchComplete = true;
       } else {
          std::tuple<int, int, int> nextNode = distPq.top();
          distPq.pop();
-         int node = std::get<NODE>(nextNode);
-         distanceCostToEndNode = ShortestPathVisitNode(nextNode, edges[node], endNode, pathCost, distPq);
-         path.push(nextNode);
-         if (distanceCostToEndNode != UNKNOWN_DISTANCE) {
-            path.push(std::make_tuple(endNode, distanceCostToEndNode + std::get<DISTANCE>(pathCost[node]) , node));
+         int nodeId = std::get<NODE>(nextNode);
+
+         if (nodeId == endNode) {
+            searchComplete = true;
+            pathFound = true;
+         } else {
+            VisitNode(nodeId, edges[nodeId], endNode, pathCost, distPq);
          }
+         path.push(nextNode);
       }
    }
+   return pathFound;
 }
 
 void InitGraph(std::vector<std::vector< std::pair<int, int> > >& edges) {
@@ -299,7 +295,6 @@ int main(int argc, char* argv[]) {
 
    std::stack<std::tuple<int, int, int> > path;
    std::vector<std::vector< std::pair<int, int> > > edges;
-   // Mapping node to pair of values: first is PATHVIA, second is DISTANCE
 
    InitGraph(edges);
    PrintGraph(edges);
@@ -310,7 +305,8 @@ int main(int argc, char* argv[]) {
    InitPathCost(edges, startNode, pathCost);
 
    std::cout << std::endl << std::endl;
-   ShortestPath(edges, startNode, endNode, pathCost, distPq, path);
-   //PrintPriorities(distPq);
-   PrintPath(startNode, endNode, path);
+   bool pathFound = ShortestPath(edges, startNode, endNode, pathCost, distPq, path);
+   if (pathFound) {
+      PrintPath(startNode, endNode, path);
+   }
 }
