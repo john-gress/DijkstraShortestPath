@@ -158,10 +158,13 @@ void UpdatePriorityQueue(int node, int distance, int nodeVia, DistanceNode& dist
 void VisitNode(int nodeId, std::vector<std::pair<int, int> >& nodeEdges,
    int endNode, std::vector<std::tuple<int, int, bool> >& pathCost, DistanceNode& distPq) { 
 
-   std::cout << std::endl << "Visiting node: " <<  GetNodeLetter(nodeId) << std::endl;
-
    for (const auto edge : nodeEdges) {
+      // Looking at the edges associated with nodeId; i.e., what is nodeId connected to in the graph
       if (! std::get<VISITED>(pathCost[edge.first])) {
+         // Using edge as X -> Y, where X is nodeId and Y is edge.first:
+         // If the cost of getting to Y, as previously calculated from startNode, is greater than
+         // the cost of the distance from X to Y plus the cost to get from startNode to X;
+         // then a shorter path has been found to Y through X.
          if (std::get<DISTANCE>(pathCost[edge.first]) > edge.second + std::get<DISTANCE>(pathCost[nodeId])) {
             std::get<DISTANCE>(pathCost[edge.first]) = edge.second + std::get<DISTANCE>(pathCost[nodeId]);
             UpdatePriorityQueue(edge.first, std::get<DISTANCE>(pathCost[edge.first]), nodeId, distPq);
@@ -189,7 +192,9 @@ bool ShortestPath(std::vector<std::vector< std::pair<int, int> > >& edges, int s
          distPq.pop();
          int nodeId = std::get<NODE>(nextNode);
 
+         std::cout << std::endl << "Visiting node: " <<  GetNodeLetter(nodeId) << std::endl;
          if (nodeId == endNode) {
+            std::cout << "   Arrived at destination: " <<  GetNodeLetter(nodeId) << std::endl;
             searchComplete = true;
             pathFound = true;
          } else {
